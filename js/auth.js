@@ -12,12 +12,15 @@
       if (session) location.replace('index.html');
       return;
     }
+    if (!session) { location.replace('login.html'); return; }
+    document.body.classList.remove('auth-pending');
+    if (!window.authReady) { window.authReady = true; window.dispatchEvent(new Event('app-auth-ready')); }
     const login = document.querySelector('#nav-login');
     const logout = document.querySelector('#nav-logout');
     if (login) login.hidden = Boolean(session);
     if (logout) logout.hidden = !session;
   }
-  client.auth.onAuthStateChange((event, session) => { updateSession(session); if (!isLoginPage && event === 'SIGNED_OUT') location.assign('login.html'); });
+  client.auth.onAuthStateChange((_event, session) => { updateSession(session); });
   client.auth.getSession().then(({data, error}) => {
     if (error) { showMessage('로그인 상태를 확인하지 못했습니다. 새로고침해 주세요.'); return; }
     updateSession(data.session);
