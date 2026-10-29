@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>게임 발굴 | Game Opportunity Radar</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="js/mock-data.js"></script>
+    <script defer src="js/app.js"></script>
+</head>
+
+<body data-page="home">
+    <header class="site-header">
+        <div class="header-inner"><a class="brand" href="index.html"><span class="brand-icon">◎</span><span>GAME
+                    OPPORTUNITY <strong>RADAR</strong></span></a>
+            <nav><a class="active" href="index.html">게임 발굴</a><a href="list.html">관심 후보 관리 <span
+                        class="nav-arrow">↗</span></a></nav>
+        </div>
+    </header>
+    <main>
+        <section class="hero wrap">
+            <div class="eyebrow"><span class="pulse"></span> PERSONAL RESEARCH TOOL <span class="divider">/</span> MVP
+                01</div>
+            <h1>다음 기회는<br><em>어디에 있을까요?</em></h1>
+            <p class="hero-copy">게임 거래와 반복 작업 속 가능성을 살펴보세요.<br>개발할 가치가 있는 다음 아이디어를 찾는 첫걸음입니다.</p>
+            <div class="notice"><span>ⓘ</span>
+                <div><strong>현재 제공되는 모든 분석은 샘플 데이터입니다.</strong><br>실시간 AI 조사나 웹 검색 결과가 아니며, 실제 의사결정 전 별도 확인이 필요합니다.
+                </div>
+            </div>
+        </section>
+        <div class="wrap home-banner"><img src="assets/게임 수익성 분석 배너.png" alt="" width="1680" height="944"></div>
+        <section class="wrap start-grid">
+            <article class="start-card discovery">
+                <div class="card-top"><span class="section-number">01 / DISCOVER</span><span
+                        class="card-symbol">✳</span></div>
+                <h2>새로운 후보 발굴</h2>
+                <p>어떤 게임부터 살펴볼지 고민된다면<br>준비된 샘플 후보를 확인해 보세요.</p><button id="discover" class="button primary">AI 자동 발굴
+                    <span>↗</span></button>
+            </article>
+            <article class="start-card search">
+                <div class="card-top"><span class="section-number">02 / ANALYZE</span><span class="card-symbol">⌕</span>
+                </div>
+                <h2>게임 직접 분석</h2>
+                <p>관심 있는 게임이 있나요?<br>게임 이름으로 샘플 분석을 확인하세요.</p>
+                <form id="search-form" novalidate><label class="sr-only" for="game-name">게임 이름</label>
+                    <div class="search-row"><input id="game-name" placeholder="게임 이름을 입력하세요" autocomplete="off"><button
+                            class="button dark" type="submit">심층 분석 <span>→</span></button></div>
+                    <p id="search-error" class="error" role="alert"></p>
+                </form>
+            </article>
+        </section>
+        <section id="results" class="wrap results" hidden>
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">DISCOVERY RESULTS <span class="divider">/</span> SAMPLE DATA</div>
+                    <h2>이런 후보는 어떠세요?</h2>
+                    <p>샘플 후보를 선택해 거래 구조와 자동화 가능성을 살펴보세요.</p>
+                </div><span id="result-count" class="count"></span>
+            </div>
+            <div id="discovery-list" class="discovery-list"></div>
+        </section>
+        <div class="wrap bottom-note"><span>✦</span> 작은 아이디어에서 다음 프로젝트가 시작됩니다.</div>
+    </main>
+    <footer>
+        <div class="wrap footer-inner"><span>GAME OPPORTUNITY RADAR</span><span>샘플 데이터 기반 개인용 리서치 도구</span></div>
+    </footer>
+</body>
+
+</html>
