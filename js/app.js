@@ -4,7 +4,7 @@ const detailURL = name => `detail.html?game=${encodeURIComponent(name)}`;
 const money = value => `${Number(value).toLocaleString('ko-KR')}원`;
 function loadCandidates() { try { const data = JSON.parse(localStorage.getItem(storageKey) || '[]'); return Array.isArray(data) ? data : []; } catch { return []; } }
 function saveCandidates(items) { try { localStorage.setItem(storageKey, JSON.stringify(items)); return true; } catch { return false; } }
-async function requestAI(endpoint, data = {}) { const response = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)}); const result = await response.json(); if (!response.ok) throw new Error(result.error || '요청에 실패했습니다.'); return result; }
+async function requestAI(endpoint, data = {}) { const response = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)}); let result; try { result = await response.json(); } catch { throw new Error('서버 응답을 읽을 수 없습니다. API 배포 상태를 확인해 주세요.'); } if (!response.ok) throw new Error(result.error || '요청에 실패했습니다.'); return result; }
 function calculate(values) { const {count, profit, cost} = values; if ([count, profit, cost].some(v => String(v).trim() === '' || !Number.isFinite(Number(v))) || Number(count) < 0 || Number(cost) < 0) return null; return Number(count) * Number(profit) - Number(cost); }
 
 if (document.body.dataset.page === 'home') {
