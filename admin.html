@@ -9,6 +9,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="js/supabase-client.js"></script>
   <script defer src="js/auth.js"></script>
+  <script defer src="js/admin.js"></script>
 </head>
 <body data-page="admin" class="auth-pending">
   <header class="site-header">
@@ -19,18 +20,19 @@
   </header>
   <main class="wrap page admin-page">
     <div class="page-heading"><div><div class="eyebrow">OPERATIONS <span class="divider">/</span> GAME OPPORTUNITY RADAR</div><h1>운영 관리<span class="accent">.</span></h1><p>서비스 운영에 필요한 정보와 관리 경로를 한곳에서 확인하세요.</p></div></div>
-    <div class="notice"><span>ⓘ</span><div>회원과 관심 후보 데이터는 권한이 있는 Supabase 계정으로 확인하세요.</div></div>
+    <div class="notice"><span>ⓘ</span><div>회원과 관심 후보 목록은 Supabase에서 불러옵니다.</div></div>
     <div class="admin-grid">
       <section id="members" class="panel admin-panel">
         <div class="panel-heading"><span>01 / MEMBERS</span><h2>회원 관리</h2><p>가입 계정과 로그인 관련 문제를 확인합니다.</p></div>
-        <div class="info-row"><h3>확인할 정보</h3><p>가입 이메일, 계정 및 이메일 인증 상태</p></div>
-        <div class="info-row"><h3>관리 작업</h3><p>Supabase Authentication에서 계정 정보를 확인하고 로그인 문의를 점검합니다.</p></div>
+        <p id="members-message" class="admin-message" role="status">회원 목록을 불러오는 중입니다…</p>
+        <div class="table-wrap" id="members-list" hidden><table><thead><tr><th>이메일</th><th>역할</th><th>사용자 ID</th></tr></thead><tbody id="members-body"></tbody></table></div>
+        <p class="muted small">이메일 인증 상태는 Supabase Authentication에서 확인할 수 있습니다.</p>
         <a class="button primary" href="https://supabase.com/dashboard/project/jtubngjnkykkfmutriro/auth/users" target="_blank" rel="noopener noreferrer">회원 관리 열기 <span>↗</span></a>
       </section>
       <section id="candidates" class="panel admin-panel">
         <div class="panel-heading"><span>02 / SAVED CANDIDATES</span><h2>관심 후보 관리</h2><p>사용자가 저장한 후보와 데이터 연결을 확인합니다.</p></div>
-        <div class="info-row"><h3>확인할 정보</h3><p>게임 이름, 저장 사용자, 조사 상태 및 저장된 분석 내용</p></div>
-        <div class="info-row"><h3>관리 작업</h3><p>Supabase Table Editor에서 saved_candidates를 열어 저장이나 사용자 연결 문제를 확인합니다.</p></div>
+        <p id="candidates-message" class="admin-message" role="status">관심 후보를 불러오는 중입니다…</p>
+        <div class="table-wrap" id="candidates-list" hidden><table><thead><tr><th>게임</th><th>사용자</th><th>조사 상태</th><th>분석 요약</th></tr></thead><tbody id="candidates-body"></tbody></table></div>
         <a class="button primary" href="https://supabase.com/dashboard/project/jtubngjnkykkfmutriro/editor" target="_blank" rel="noopener noreferrer">후보 데이터 확인 <span>↗</span></a>
       </section>
       <section id="ai" class="panel admin-panel">
