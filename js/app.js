@@ -1,9 +1,6 @@
-const storageKey = 'game-opportunity-radar-candidates';
 const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const detailURL = name => `detail.html?game=${encodeURIComponent(name)}`;
 const money = value => `${Number(value).toLocaleString('ko-KR')}원`;
-function loadCandidates() { try { const data = JSON.parse(localStorage.getItem(storageKey) || '[]'); return Array.isArray(data) ? data : []; } catch { return []; } }
-function saveCandidates(items) { try { localStorage.setItem(storageKey, JSON.stringify(items)); return true; } catch { return false; } }
 async function requestAI(endpoint, data = {}) { const response = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)}); let result; try { result = await response.json(); } catch { throw new Error('서버 응답을 읽을 수 없습니다. API 배포 상태를 확인해 주세요.'); } if (!response.ok) throw new Error(result.error || '요청에 실패했습니다.'); return result; }
 function calculate(values) { const {count, profit, cost} = values; if ([count, profit, cost].some(v => String(v).trim() === '' || !Number.isFinite(Number(v))) || Number(count) < 0 || Number(cost) < 0) return null; return Number(count) * Number(profit) - Number(cost); }
 
@@ -16,7 +13,11 @@ if (document.body.dataset.page === 'home') {
 
 if (document.body.dataset.page === 'detail') {
   const name = new URLSearchParams(location.search).get('game')?.trim() || '게임 미지정';
-  const saved = loadCandidates().find(item => item.name.toLowerCase() === name.toLowerCase());
+  let saved;
+  async function loadSaved() {
+    try { saved = (await window.candidates.list()).find(item => item.name.toLowerCase() === name.toLowerCase()); await startAnalysis(); }
+    catch { document.querySelector('#detail-content').textContent = '저장된 후보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'; }
+  }
   async function startAnalysis(force = false) {
   const content = document.querySelector('#detail-content');
   let game = !force && saved?.game ? saved.game : null;
@@ -30,18 +31,51 @@ if (document.body.dataset.page === 'detail') {
   const currentValues = () => Object.fromEntries(['count','profit','cost'].map(key => [key, document.getElementById(key).value]));
   function updateCalculation() { const result = calculate(currentValues()); document.querySelector('#result').textContent = result === null ? '—' : money(result); document.querySelector('#calc-error').textContent = result === null ? '유효한 숫자를 입력해 주세요. 거래 건수와 운영비는 0 이상이어야 합니다.' : ''; }
   document.querySelectorAll('.calculator input').forEach(input => input.addEventListener('input', updateCalculation)); updateCalculation();
-  document.querySelector('#save').addEventListener('click', () => { const items = loadCandidates(); const index = items.findIndex(item => item.name.toLowerCase() === game.name.toLowerCase()); const item = {name:game.name, game, values:currentValues(), status:index >= 0 ? items[index].status : '조사 중'}; if (index >= 0) items[index] = item; else items.push(item); document.querySelector('#save-message').textContent = saveCandidates(items) ? '관심 후보에 저장했습니다. 후보 관리에서 확인할 수 있습니다.' : '저장하지 못했습니다. 브라우저 저장 설정을 확인해 주세요.'; });
+  document.querySelector('#save').addEventListener('click', async event => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      saved = await window.candidates.save({id:saved?.id, name:game.name, game, values:currentValues(), status:saved?.status || '조사 중'});
+      document.querySelector('#save-message').textContent = '관심 후보에 저장했습니다. 후보 관리에서 확인할 수 있습니다.';
+    } catch { document.querySelector('#save-message').textContent = '저장하지 못했습니다. 로그인 및 데이터베이스 연결을 확인해 주세요.'; }
+    finally { button.disabled = false; }
+  });
   }
-  startAnalysis();
+  loadSaved();
 }
 
 if (document.body.dataset.page === 'list') {
   let selected = new Set();
+  let items = [];
+  async function refresh() {
+    try { items = await window.candidates.list(); render(); }
+    catch { document.querySelector('#compare-error').textContent = '저장된 후보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'; }
+  }
   const statusOptions = ['조사 중','개발 검토','보류'];
-  function render() { const items = loadCandidates(); selected = new Set([...selected].filter(name => items.some(item => item.name === name))); document.querySelector('#saved-count').textContent = items.length; const list = document.querySelector('#saved-list'); if (!items.length) { list.innerHTML = '<div class="empty-state"><span>◇</span><h3>아직 저장한 후보가 없습니다.</h3><p>게임을 살펴보고 관심 후보를 저장해 보세요.</p><a class="button dark" href="index.html">게임 발굴하기 →</a></div>'; } else { list.innerHTML = items.map(item => { const result = calculate(item.values || {}); return `<article class="saved-card"><label class="select-game"><input type="checkbox" data-select="${escapeHTML(item.name)}" ${selected.has(item.name) ? 'checked' : ''}><span class="sr-only">${escapeHTML(item.name)} 비교 선택</span></label><div class="saved-main"><span class="game-index">SAVED CANDIDATE</span><h3>${escapeHTML(item.name)}</h3><p>${escapeHTML(item.game.opportunity)}</p><div class="saved-metrics"><div><span>예상 월 수익</span><strong>${result === null ? '입력 확인 필요' : money(result)}</strong></div><div><span>자동화 적합도</span><strong>${escapeHTML(item.game.fit)}</strong></div><div><span>개발 난이도</span><strong>${escapeHTML(item.game.difficulty)}</strong></div></div></div><div class="saved-actions"><label>조사 상태<select data-status="${escapeHTML(item.name)}">${statusOptions.map(status => `<option ${item.status === status ? 'selected' : ''}>${status}</option>`).join('')}</select></label><a href="${detailURL(item.name)}">상세 분석 보기 ↗</a><button class="text-button" data-delete="${escapeHTML(item.name)}">삭제</button></div></article>`; }).join(''); } }
-  document.querySelector('#saved-list').addEventListener('change', event => { const name = event.target.dataset.select; if (name !== undefined) { event.target.checked ? selected.add(name) : selected.delete(name); document.querySelector('#comparison').hidden = true; } const statusName = event.target.dataset.status; if (statusName !== undefined) { const items = loadCandidates(); const item = items.find(x => x.name === statusName); if (item) { item.status = event.target.value; if (!saveCandidates(items)) document.querySelector('#compare-error').textContent = '상태를 저장하지 못했습니다.'; } document.querySelector('#comparison').hidden = true; } });
-  document.querySelector('#saved-list').addEventListener('click', event => { const name = event.target.dataset.delete; if (name !== undefined) { if (!saveCandidates(loadCandidates().filter(item => item.name !== name))) { document.querySelector('#compare-error').textContent = '후보를 삭제하지 못했습니다.'; return; } selected.delete(name); document.querySelector('#comparison').hidden = true; render(); } });
-  document.querySelector('#compare-button').addEventListener('click', () => { const items = loadCandidates().filter(item => selected.has(item.name)); const error = document.querySelector('#compare-error'); if (items.length < 2 || items.length > 3) { error.textContent = '비교할 후보를 2~3개 선택해 주세요.'; document.querySelector('#comparison').hidden = true; return; } error.textContent = ''; const rows = [['수익 기회', item => item.game.opportunity], ['예상 월 수익', item => { const result = calculate(item.values || {}); return result === null ? '입력 확인 필요' : money(result); }], ['자동화 적합도', item => item.game.fit], ['개발 난이도', item => item.game.difficulty], ['조사 상태', item => item.status]]; document.querySelector('#comparison-table').innerHTML = `<table><thead><tr><th>비교 항목</th>${items.map(item => `<th>${escapeHTML(item.name)}</th>`).join('')}</tr></thead><tbody>${rows.map(([label, get]) => `<tr><th>${label}</th>${items.map(item => `<td>${escapeHTML(get(item))}</td>`).join('')}</tr>`).join('')}</tbody></table>`; document.querySelector('#comparison').hidden = false; }); render();
+  function render() { selected = new Set([...selected].filter(name => items.some(item => item.name === name))); document.querySelector('#saved-count').textContent = items.length; const list = document.querySelector('#saved-list'); if (!items.length) { list.innerHTML = '<div class="empty-state"><span>◇</span><h3>아직 저장한 후보가 없습니다.</h3><p>게임을 살펴보고 관심 후보를 저장해 보세요.</p><a class="button dark" href="index.html">게임 발굴하기 →</a></div>'; } else { list.innerHTML = items.map(item => { const result = calculate(item.values || {}); return `<article class="saved-card"><label class="select-game"><input type="checkbox" data-select="${escapeHTML(item.name)}" ${selected.has(item.name) ? 'checked' : ''}><span class="sr-only">${escapeHTML(item.name)} 비교 선택</span></label><div class="saved-main"><span class="game-index">SAVED CANDIDATE</span><h3>${escapeHTML(item.name)}</h3><p>${escapeHTML(item.game.opportunity)}</p><div class="saved-metrics"><div><span>예상 월 수익</span><strong>${result === null ? '입력 확인 필요' : money(result)}</strong></div><div><span>자동화 적합도</span><strong>${escapeHTML(item.game.fit)}</strong></div><div><span>개발 난이도</span><strong>${escapeHTML(item.game.difficulty)}</strong></div></div></div><div class="saved-actions"><label>조사 상태<select data-status="${escapeHTML(item.name)}">${statusOptions.map(status => `<option ${item.status === status ? 'selected' : ''}>${status}</option>`).join('')}</select></label><a href="${detailURL(item.name)}">상세 분석 보기 ↗</a><button class="text-button" data-delete="${escapeHTML(item.name)}">삭제</button></div></article>`; }).join(''); } }
+  document.querySelector('#saved-list').addEventListener('change', async event => {
+    const name = event.target.dataset.select;
+    if (name !== undefined) { event.target.checked ? selected.add(name) : selected.delete(name); document.querySelector('#comparison').hidden = true; }
+    const statusName = event.target.dataset.status;
+    if (statusName !== undefined) {
+      const item = items.find(x => x.name === statusName);
+      if (!item) return;
+      event.target.disabled = true;
+      try { const updated = await window.candidates.setStatus(item.id, event.target.value); Object.assign(item, updated); document.querySelector('#compare-error').textContent = ''; document.querySelector('#comparison').hidden = true; }
+      catch { event.target.value = item.status; document.querySelector('#compare-error').textContent = '상태를 저장하지 못했습니다.'; }
+      finally { event.target.disabled = false; }
+    }
+  });
+  document.querySelector('#saved-list').addEventListener('click', async event => {
+    const name = event.target.dataset.delete;
+    if (name === undefined) return;
+    const item = items.find(x => x.name === name);
+    if (!item) return;
+    event.target.disabled = true;
+    try { await window.candidates.remove(item.id); items = items.filter(x => x.id !== item.id); selected.delete(name); document.querySelector('#comparison').hidden = true; document.querySelector('#compare-error').textContent = ''; render(); }
+    catch { event.target.disabled = false; document.querySelector('#compare-error').textContent = '후보를 삭제하지 못했습니다.'; }
+  });
+  document.querySelector('#compare-button').addEventListener('click', () => { const chosen = items.filter(item => selected.has(item.name)); const error = document.querySelector('#compare-error'); if (chosen.length < 2 || chosen.length > 3) { error.textContent = '비교할 후보를 2~3개 선택해 주세요.'; document.querySelector('#comparison').hidden = true; return; } error.textContent = ''; const rows = [['수익 기회', item => item.game.opportunity], ['예상 월 수익', item => { const result = calculate(item.values || {}); return result === null ? '입력 확인 필요' : money(result); }], ['자동화 적합도', item => item.game.fit], ['개발 난이도', item => item.game.difficulty], ['조사 상태', item => item.status]]; document.querySelector('#comparison-table').innerHTML = `<table><thead><tr><th>비교 항목</th>${chosen.map(item => `<th>${escapeHTML(item.name)}</th>`).join('')}</tr></thead><tbody>${rows.map(([label, get]) => `<tr><th>${label}</th>${chosen.map(item => `<td>${escapeHTML(get(item))}</td>`).join('')}</tr>`).join('')}</tbody></table>`; document.querySelector('#comparison').hidden = false; }); refresh();
 }
 }
 if (window.authReady) initializeApp();

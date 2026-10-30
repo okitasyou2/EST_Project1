@@ -7,12 +7,19 @@
   };
   if (!client) { const login = document.querySelector('#nav-login'); if (login) login.hidden = false; showMessage('인증 서비스를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해 주세요.'); return; }
 
+  let displayedUserId = null;
   function updateSession(session) {
     if (isLoginPage) {
       if (session) location.replace('index.html');
       return;
     }
     if (!session) { location.replace('login.html'); return; }
+    if (displayedUserId && displayedUserId !== session.user?.id) {
+      document.body.classList.add('auth-pending');
+      location.reload();
+      return;
+    }
+    displayedUserId = session.user?.id;
     document.body.classList.remove('auth-pending');
     if (!window.authReady) { window.authReady = true; window.dispatchEvent(new Event('app-auth-ready')); }
     const login = document.querySelector('#nav-login');
