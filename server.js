@@ -12,7 +12,7 @@ try {
 
 const { generate } = require('./lib/ai');
 const send = (res, status, data) => { res.writeHead(status, {'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store'}); res.end(JSON.stringify(data)); };
-const files = {'/':'index.html','/index.html':'index.html','/login.html':'login.html','/mypage.html':'mypage.html','/detail.html':'detail.html','/list.html':'list.html','/js/app.js':'js/app.js','/js/auth.js':'js/auth.js','/js/candidates.js':'js/candidates.js','/js/mypage.js':'js/mypage.js','/js/supabase-client.js':'js/supabase-client.js','/css/style.css':'css/style.css','/assets/게임 수익성 분석 배너.png':'assets/게임 수익성 분석 배너.png'};
+const files = {'/':'index.html','/index.html':'index.html','/login.html':'login.html','/mypage.html':'mypage.html','/detail.html':'detail.html','/list.html':'list.html','/admin.html':'admin.html','/js/app.js':'js/app.js','/js/auth.js':'js/auth.js','/js/candidates.js':'js/candidates.js','/js/mypage.js':'js/mypage.js','/js/supabase-client.js':'js/supabase-client.js','/css/style.css':'css/style.css','/css/admin.css':'css/admin.css','/assets/게임 수익성 분석 배너.png':'assets/게임 수익성 분석 배너.png'};
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (req.method === 'POST' && (url.pathname === '/api/discover' || url.pathname === '/api/analyze')) {

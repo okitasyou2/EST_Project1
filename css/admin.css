@@ -1,0 +1,11 @@
+.admin-page .notice { margin-bottom: 24px; }
+.admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.admin-panel { display: flex; flex-direction: column; margin: 0; }
+.admin-panel .info-row { flex: 1; }
+.admin-panel .button { align-self: flex-start; margin-top: 22px; }
+@media (max-width: 900px) {
+  .admin-grid { grid-template-columns: 1fr; }
+  .admin-page .admin-panel { min-width: 0; }
+  .header-inner:has(nav[aria-label="운영 메뉴"]) { flex-wrap: wrap; padding: 16px 0; }
+  nav[aria-label="운영 메뉴"] { flex-wrap: wrap; gap: 12px 20px; }
+}
