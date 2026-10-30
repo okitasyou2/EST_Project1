@@ -1,6 +1,7 @@
 (() => {
   const client = window.gameSupabase;
   const isLoginPage = document.body.dataset.page === 'login';
+  const isAdminPage = document.body.dataset.page === 'admin';
   const showMessage = (message, error = true) => {
     const target = document.querySelector(isLoginPage ? '#auth-message' : '#auth-status');
     if (target) { target.textContent = message; target.classList.toggle('error', error); }
@@ -8,7 +9,9 @@
   if (!client) { const login = document.querySelector('#nav-login'); if (login) login.hidden = false; showMessage('인증 서비스를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해 주세요.'); return; }
 
   let displayedUserId = null;
+  let sessionVersion = 0;
   function updateSession(session) {
+    const version = ++sessionVersion;
     if (isLoginPage) {
       if (session) location.replace('index.html');
       return;
@@ -20,12 +23,32 @@
       return;
     }
     displayedUserId = session.user?.id;
-    document.body.classList.remove('auth-pending');
-    if (!window.authReady) { window.authReady = true; window.dispatchEvent(new Event('app-auth-ready')); }
     const login = document.querySelector('#nav-login');
     const logout = document.querySelector('#nav-logout');
     if (login) login.hidden = Boolean(session);
     if (logout) logout.hidden = !session;
+    const adminLink = document.querySelector('#nav-admin');
+    if (adminLink) adminLink.hidden = true;
+    if (isAdminPage) document.body.classList.add('auth-pending');
+    // Supabase 인증 이벤트가 끝난 뒤 별도로 프로필을 조회합니다.
+    setTimeout(async () => {
+      try {
+        const {data, error} = await client.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+        if (version !== sessionVersion) return;
+        if (error || !data || !['user', 'admin'].includes(data.role)) throw error || new Error('프로필을 확인할 수 없습니다.');
+        if (isAdminPage && data.role !== 'admin') { location.replace('index.html'); return; }
+        if (adminLink) adminLink.hidden = data.role !== 'admin';
+        document.body.classList.remove('auth-pending');
+        if (!window.authReady) { window.authReady = true; window.dispatchEvent(new Event('app-auth-ready')); }
+      } catch {
+        if (version !== sessionVersion) return;
+        showMessage('사용자 권한을 확인하지 못했습니다. 새로고침해 주세요.');
+        if (!isAdminPage) {
+          document.body.classList.remove('auth-pending');
+          if (!window.authReady) { window.authReady = true; window.dispatchEvent(new Event('app-auth-ready')); }
+        }
+      }
+    }, 0);
   }
   client.auth.onAuthStateChange((_event, session) => { updateSession(session); });
   client.auth.getSession().then(({data, error}) => {

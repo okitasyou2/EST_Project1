@@ -10,16 +10,16 @@
   <script defer src="js/supabase-client.js"></script>
   <script defer src="js/auth.js"></script>
 </head>
-<body class="auth-pending">
+<body data-page="admin" class="auth-pending">
   <header class="site-header">
     <div class="header-inner">
       <a class="brand" href="index.html"><span class="brand-icon">◎</span><span>GAME OPPORTUNITY <strong>RADAR</strong></span></a>
-      <nav aria-label="운영 메뉴"><a href="#members">회원 관리</a><a href="#candidates">관심 후보 관리</a><a href="#ai">AI 서비스 운영</a><a href="index.html">서비스로 이동 ↗</a><button id="nav-logout" class="text-button" type="button" hidden>로그아웃</button><span id="auth-status" role="status"></span></nav>
+      <nav aria-label="운영 메뉴"><span class="admin-links"><a href="#members">회원 관리</a><a href="#candidates">관심 후보 관리</a><a href="#ai">AI 서비스 운영</a></span><a href="index.html">서비스로 이동 ↗</a><button id="nav-logout" class="text-button" type="button" hidden>로그아웃</button><span id="auth-status" role="status"></span></nav>
     </div>
   </header>
   <main class="wrap page admin-page">
     <div class="page-heading"><div><div class="eyebrow">OPERATIONS <span class="divider">/</span> GAME OPPORTUNITY RADAR</div><h1>운영 관리<span class="accent">.</span></h1><p>서비스 운영에 필요한 정보와 관리 경로를 한곳에서 확인하세요.</p></div></div>
-    <div class="notice"><span>ⓘ</span><div><strong>관리자 권한은 아직 설정되지 않았습니다.</strong><br>이 화면은 로그인한 사용자에게 표시됩니다. 회원과 다른 사용자의 데이터는 Supabase에서 권한이 있는 관리자만 확인하세요.</div></div>
+    <div class="notice"><span>ⓘ</span><div>회원과 관심 후보 데이터는 권한이 있는 Supabase 계정으로 확인하세요.</div></div>
     <div class="admin-grid">
       <section id="members" class="panel admin-panel">
         <div class="panel-heading"><span>01 / MEMBERS</span><h2>회원 관리</h2><p>가입 계정과 로그인 관련 문제를 확인합니다.</p></div>
